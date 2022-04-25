@@ -1,0 +1,28 @@
+# lots of ideas from here: https://github.com/dflook/terraform-github-actions
+# https://dev.to/tomassirio/make-changes-on-repository-a-while-modifying-repository-b-github-actions-is-here-50g8
+# https://docs.github.com/en/actions/using-workflows/reusing-workflows#using-outputs-from-a-reusable-workflow
+---
+name: "reusable-docker-tag"
+
+on:
+  workflow_call:
+    outputs:
+      short_sha:
+        description: "Short sha as string"
+        value: ${{ jobs.docker_tag.outputs.short_sha }}
+      docker_tag:
+        description: "docker image tag"
+        value: ${{ jobs.docker_tag.outputs.docker_tag }}
+
+jobs:
+  docker_tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - id: short_sha
+        run: echo "::set-output name=short_sha::$(git rev-parse --short HEAD)"
+      - id: docker_tag
+        run: echo "::set-output name=docker_tag::${{ github.ref_name }}-${{steps.short_sha.outputs.short_sha}}"
+    outputs:
+      short_sha: ${{steps.short_sha.outputs.short_sha}}
+      docker_tag: ${{steps.docker_tag.outputs.docker_tag}}

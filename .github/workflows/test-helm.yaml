@@ -1,0 +1,59 @@
+name: test-helm
+
+# when to run the this workflow
+on:
+  workflow_dispatch:
+  push:
+    branches-ignore:
+      - 'main'
+      - 'master'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  test-helm:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v1
+        with:
+          version: v3.8.1
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2.2.1
+
+      # https://github.com/helm/chart-testing/blob/main/doc/ct_lint.md
+      - name: Run chart-testing (list-changed)
+        id: list-changed
+        run: |
+          changed=$(ct list-changed --target-branch ${{ github.event.repository.default_branch }})
+          if [[ -n "$changed" ]]; then
+            echo "::set-output name=changed::true"
+          fi
+
+      - name: Run chart-testing (lint)
+        id: helm-lint
+        if: steps.list-changed.outputs.changed == 'true'
+        run: |
+          ct lint --chart-dirs helm/ --debug --target-branch ${{ github.event.repository.default_branch }} --config helm/test/ct.yaml
+
+# todo make this work https://github.com/helm/chart-testing-action
+      # - name: Create kind cluster
+      #   uses: helm/kind-action@v1.2.0
+      #   if: steps.list-changed.outputs.changed == 'true'
+
+      # - name: Run chart-testing (install)
+      #   run: ct install --chart-dirs helm/ --debug --target-branch ${{ github.event.repository.default_branch }} --config helm/test/ct.yaml
+      #   if: steps.list-changed.outputs.changed == 'true'

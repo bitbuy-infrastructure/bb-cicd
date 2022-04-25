@@ -1,0 +1,93 @@
+# lots of ideas from here: https://github.com/dflook/terraform-github-actions
+# https://dev.to/tomassirio/make-changes-on-repository-a-while-modifying-repository-b-github-actions-is-here-50g8
+---
+name: "reusable-deploy"
+
+on:
+  workflow_call:
+    inputs:
+      aws_region:
+        required: true
+        type: string
+      container_name:
+        required: true
+        type: string
+      deployment_branch:
+        required: true
+        type: string
+      deployment_repo:
+        required: true
+        type: string
+      deployment_folder:
+        required: true
+        type: string
+      deployment_tag:
+        required: true
+        type: string
+      repository_name:
+        required: true
+        type: string
+      pipeline_env:
+        required: true
+        type: string
+      pipeline_tenant:
+        required: true
+        type: string
+      pipeline_zone:
+        required: true
+        type: string
+    secrets:
+      ssh-key:
+        required: true
+
+env:
+  # cluster vars
+  AWS_REGION: ${{ inputs.aws_region }}
+  # TODO THIS WILL NEED A SCRIPT TO CHANGE... some how ...
+  IMAGE_TAG: ${{ github.ref_name }}-${{ github.sha }}
+
+jobs:
+  reusable-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: ./
+
+      - name: Checkout ${{ inputs.deployment_repo }}
+        id: git_checkout
+        uses: actions/checkout@v3
+        with:
+          repository: bitbuy-infrastructure/${{ inputs.deployment_repo }}
+          ssh-key: ${{ secrets.ssh-key }}
+          path: ./${{ inputs.deployment_repo }}
+          ref: ${{ inputs.deployment_branch }}
+
+# TODO make this a script
+      - name: deployment
+        id: deployment
+        run: |
+          echo "Preparing deployment for ${{ inputs.pipeline_tenant }} ${{ inputs.pipeline_env }} ${{ inputs.pipeline_zone }}"
+          pipeline_zone=${{ inputs.pipeline_zone }}
+          _pipeline_zone="${pipeline_zone,,}"
+          _prefix="\/${{ inputs.pipeline_tenant }}\/${{ inputs.pipeline_env }}"
+          cp ./configs/common.yaml ./configs/common-ci.yaml
+          sed -i -e s/PIPELINE_TAG/${{ inputs.deployment_tag }}/g ./configs/common-ci.yaml
+          sed -i -e s/PIPELINE_PREFIX/${_prefix}/g ./configs/common-ci.yaml
+          sed -i -e s/PIPELINE_DNS_PREFIX/${_pipeline_zone}/g ./configs/common-ci.yaml
+          cat ./configs/common-ci.yaml > ./${{ inputs.deployment_repo }}/${{ inputs.deployment_folder }}/${{ inputs.pipeline_tenant }}/${{ inputs.pipeline_env }}/${_pipeline_zone}/values.yaml
+
+      - uses: webfactory/ssh-agent@v0.5.4
+        with:
+            ssh-private-key: ${{ secrets.ssh-key }}
+
+      - name: Commit files
+        run: |
+          cd ./${{ inputs.deployment_repo }}
+          git add .
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -am "update deployment for ${{ inputs.pipeline_tenant }} ${{ inputs.pipeline_env }} ${{ inputs.pipeline_zone }} ${{ github.repository }}"
+          git push
