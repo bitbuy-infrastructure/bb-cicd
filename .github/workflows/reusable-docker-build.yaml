@@ -1,0 +1,109 @@
+# lots of ideas from here: https://github.com/dflook/terraform-github-actions
+---
+name: "reusable-docker-build"
+
+on:
+  workflow_call:
+    inputs:
+      aws_region:
+        required: true
+        type: string
+      deployment_tag:
+        required: true
+        type: string
+      repository_name:
+        required: true
+        type: string
+    secrets:
+      aws_access_key_id:
+        required: true
+      aws_account:
+        required: true
+      aws_assume_role:
+        required: true
+      aws_secret_access_key:
+        required: true
+
+env:
+  # cluster vars
+  AWS_REGION: ${{ inputs.aws_region }}
+  # TODO THIS WILL NEED A SCRIPT TO CHANGE... some how ...
+  IMAGE_TAG: ${{ github.ref_name }}-${{ github.sha }}
+
+jobs:
+  reusable-docker-build:
+    runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.aws_access_key_id }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
+          role-to-assume: arn:aws:iam::${{ secrets.aws_account }}:role/${{ secrets.aws_assume_role }}
+
+      # - name: Test environment is configured with AWS credentials
+      #   run: |
+      #     aws sts get-caller-identity
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: ./
+
+      - name: Set up QEMU for multi Architecture Build
+        uses: docker/setup-qemu-action@v1
+
+      # https://github.com/docker/setup-buildx-action
+      # TODO set a version here (not latest)
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          version: latest
+          driver-opts: network=host
+
+      - name: Docker Build and Push local
+        id: docker_build
+        run: |
+          docker build . -t localhost:5000/${{ inputs.repository_name }}:${{ inputs.deployment_tag }}
+          docker push localhost:5000/${{ inputs.repository_name }}:${{ inputs.deployment_tag }}
+
+      # this needs to image to be in a repo
+      - name: Docker Inspect
+        run: |
+          docker buildx imagetools inspect localhost:5000/${{ inputs.repository_name }}:${{ inputs.deployment_tag }}
+
+      # https://github.com/snyk/actions/tree/master/docker
+      - name: Run Snyk to check containers image for vulnerabilities
+        uses: snyk/actions/docker@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          image: localhost:5000/${{ inputs.repository }}:${{ github.sha }}
+
+      - name: Login to Amazon ECR
+        if: github.event_name == 'push'
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      # https://docs.github.com/en/actions/learn-github-actions/contexts#github-context
+      - name: Tag and push image to Amazon ECR
+        if: github.event_name == 'push'
+        id: docker_tag
+        env:
+          ECR_ACCOUNT: ${{ secrets.aws_account }}
+          ECR_REGION: ${{ env.AWS_REGION }}
+          ECR_REPOSITORY: ${{ inputs.repository_name }}
+        run: |
+          docker tag localhost:5000/${ECR_REPOSITORY}:${{ inputs.deployment_tag }} ${ECR_ACCOUNT}.dkr.ecr.${ECR_REGION}.amazonaws.com/${ECR_REPOSITORY}:${{ inputs.deployment_tag }}
+          docker push ${ECR_ACCOUNT}.dkr.ecr.${ECR_REGION}.amazonaws.com/${ECR_REPOSITORY}:${{ inputs.deployment_tag }}

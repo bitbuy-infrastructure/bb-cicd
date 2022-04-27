@@ -1,0 +1,47 @@
+# lots of ideas from here: https://github.com/dflook/terraform-github-actions
+# https://dev.to/tomassirio/make-changes-on-repository-a-while-modifying-repository-b-github-actions-is-here-50g8
+---
+name: "reusable-pipeline-params"
+
+on:
+  workflow_call:
+    inputs:
+      pipeline_zone:
+        required: true
+        type: string
+    outputs:
+      params:
+        description: "deployment params based on branch"
+        value: ${{ jobs.pipeline_params.outputs.params }}
+
+# TODO make this more dynamic based on env
+# make a mapping for pipeline
+
+jobs:
+  pipeline_params:
+    runs-on: ubuntu-latest
+    steps:
+      - name: populate-vars
+        id: params
+        shell: python
+        run: |
+          if "${{ github.ref_name }}" != 'main':
+            params = {
+              'env': {
+                'pipeline_tenant': 'bbtd',
+                'pipeline_env': 'np',
+                'pipeline_zone': '${{ inputs.pipeline_zone }}',
+              }
+            }
+          else:
+            params = {
+              'env': {
+                'pipeline_tenant': 'bbtd',
+                'pipeline_env': 'np',
+                'pipeline_zone': 'main01',
+              }
+            }
+          print(f'::set-output name=params::{params!s}')
+          print(f'{params}')
+    outputs:
+      params: ${{ steps.params.outputs.params }}
