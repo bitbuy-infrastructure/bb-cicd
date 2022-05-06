@@ -61,7 +61,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          path: ${{ inputs.dockerfile_dir }}
+          path: ./
 
       - name: Set up QEMU for multi Architecture Build
         uses: docker/setup-qemu-action@v1
@@ -78,7 +78,7 @@ jobs:
       - name: Docker Build and Push local
         id: docker_build
         run: |
-          docker build . -t localhost:5000/${{ inputs.repository_name }}:${{ inputs.deployment_tag }}
+          docker build ${{ inputs.dockerfile_dir }} -t localhost:5000/${{ inputs.repository_name }}:${{ inputs.deployment_tag }}
           docker push localhost:5000/${{ inputs.repository_name }}:${{ inputs.deployment_tag }}
 
       # this needs to image to be in a repo
