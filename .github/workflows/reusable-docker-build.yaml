@@ -96,7 +96,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.snyk_token }}
         with:
-          image: localhost:5000/${{ inputs.repository }}:${{ github.sha }}
+          image: localhost:5000/${{ inputs.repository_name }}:${{ inputs.deployment_tag }}
 
       - name: Login to Amazon ECR
         if: github.event_name == 'push'
