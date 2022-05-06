@@ -27,6 +27,9 @@ on:
         required: true
       aws_secret_access_key:
         required: true
+      snyk_token:
+        required: false
+
 
 env:
   # cluster vars
@@ -91,7 +94,7 @@ jobs:
         uses: snyk/actions/docker@master
         continue-on-error: true
         env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          SNYK_TOKEN: ${{ secrets.snyk_token }}
         with:
           image: localhost:5000/${{ inputs.repository }}:${{ github.sha }}
 
