@@ -1,0 +1,21 @@
+ci-demo:
+  configMaps:
+    envVars:
+    - PORT: 8080
+  env:
+  - NAME: HELL0
+    VALUE: World
+  image:
+    repository: 972594475906.dkr.ecr.ca-central-1.amazonaws.com/test/bitbuy-infrastructure/ci-demo
+    tag: PIPELINE_TAG
+  ingress:
+    annotations:
+      kubernetes.io/ingress.class: nginx
+    enable: true
+    rules:
+    - host: PIPELINE_DNS_PREFIX-ci-demo.teod.bitbuy.private
+      pathType: Prefix
+      paths:
+      - /
+  service:
+    name: ci-demo-dev

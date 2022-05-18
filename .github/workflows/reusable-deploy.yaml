@@ -36,6 +36,9 @@ on:
       pipeline_zone:
         required: true
         type: string
+      pipeline_environment:
+        required: true
+        type: string
     secrets:
       ssh-key:
         required: true
@@ -49,13 +52,31 @@ env:
 jobs:
   reusable-deploy:
     runs-on: ubuntu-latest
+    environment: "${{ inputs.pipeline_environment }}"
 
     steps:
+      # checkout the microservice ... ie ci-demo
       - name: Checkout
         uses: actions/checkout@v3
         with:
           path: ./
 
+      # checkout the pipeline (this repo)
+      - name: Check out pipeline repo
+        uses: actions/checkout@v3
+        with:
+          repository: bitbuy-infrastructure/bb-cicd
+          ref: BBSECAWS-388
+          path: ./pipeline
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+
+      - run: pip install -r ./pipeline/requirements.txt
+
+      # checkout the argocd repo
       - name: Checkout ${{ inputs.deployment_repo }}
         id: git_checkout
         uses: actions/checkout@v3
@@ -66,18 +87,19 @@ jobs:
           ref: ${{ inputs.deployment_branch }}
 
 # TODO make this a script
-      - name: deployment
+      - name: Update Tag and Push to ArgoCD
         id: deployment
+        env:
+          ARGOCD_FOLDER: ${{ inputs.deployment_repo }}
+          DEPLOYMENT_FOLDER: ${{ inputs.deployment_folder }}
+          DEPLOYMENT_TAG: ${{ inputs.deployment_tag }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+          PIPELINE_ENV: ${{ inputs.pipeline_env }}
+          PIPELINE_TENANT: ${{ inputs.pipeline_tenant }}
+          PIPELINE_ZONE: ${{ inputs.pipeline_zone }}
         run: |
-          echo "Preparing deployment for ${{ inputs.pipeline_tenant }} ${{ inputs.pipeline_env }} ${{ inputs.pipeline_zone }}"
-          pipeline_zone=${{ inputs.pipeline_zone }}
-          _pipeline_zone="${pipeline_zone,,}"
-          _prefix="\/${{ inputs.pipeline_tenant }}\/${{ inputs.pipeline_env }}"
-          cp ./configs/common.yaml ./configs/common-ci.yaml
-          sed -i -e s/PIPELINE_TAG/${{ inputs.deployment_tag }}/g ./configs/common-ci.yaml
-          sed -i -e s/PIPELINE_PREFIX/${_prefix}/g ./configs/common-ci.yaml
-          sed -i -e s/PIPELINE_DNS_PREFIX/${_pipeline_zone}/g ./configs/common-ci.yaml
-          cat ./configs/common-ci.yaml > ./${{ inputs.deployment_repo }}/${{ inputs.deployment_folder }}/${{ inputs.pipeline_tenant }}/${{ inputs.pipeline_env }}/${_pipeline_zone}/values.yaml
+          python ${{ github.workspace }}/pipeline/src/pipeline.py
+          cat ${{ github.workspace }}/${{ inputs.deployment_repo }}/${{ inputs.deployment_folder }}/${{ inputs.pipeline_tenant }}/${{ inputs.pipeline_env }}/${{ inputs.pipeline_zone }}/values.yaml
 
       - uses: webfactory/ssh-agent@v0.5.4
         with:
@@ -89,5 +111,5 @@ jobs:
           git add .
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git commit -am "update deployment for ${{ inputs.pipeline_tenant }} ${{ inputs.pipeline_env }} ${{ inputs.pipeline_zone }} ${{ github.repository }}"
-          git push
+          git commit -am "update deployment for ${{ inputs.pipeline_tenant }} ${{ inputs.pipeline_env }} ${{ inputs.pipeline_zone }} ${{ github.repository }} ${{ inputs.deployment_tag }}"
+          git push --force
