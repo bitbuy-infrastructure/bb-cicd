@@ -28,7 +28,7 @@ env:
   # cluster vars
   AWS_REGION: ${{ inputs.aws_region }}
   # TODO THIS WILL NEED A SCRIPT TO CHANGE... some how ...
-  IMAGE_TAG: ${{ github.sha }}
+  IMAGE_TAG: image-${{ github.sha }}
 
 jobs:
   reusable-docker-build:
