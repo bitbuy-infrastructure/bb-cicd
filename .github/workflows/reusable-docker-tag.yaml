@@ -22,7 +22,7 @@ jobs:
       - id: short_sha
         run: echo "::set-output name=short_sha::$(git rev-parse --short HEAD)"
       - id: docker_tag
-        run: echo "::set-output name=docker_tag::${{ github.ref_name }}-${{steps.short_sha.outputs.short_sha}}"
+        run: echo "::set-output name=docker_tag::${{ github.ref_name }}-${{steps.short_sha.outputs.short_sha}}" | sed 's/[^a-zA-Z0-/-9]/-/g'
     outputs:
       short_sha: ${{steps.short_sha.outputs.short_sha}}
       docker_tag: ${{steps.docker_tag.outputs.docker_tag}}
