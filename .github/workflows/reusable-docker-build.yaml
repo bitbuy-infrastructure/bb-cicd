@@ -92,13 +92,13 @@ jobs:
           image: localhost:5000/${{ inputs.repository }}:${{ github.sha }}
 
       - name: Login to Amazon ECR
-        if: github.event_name == 'push' or github.event_name != 'pull_request'
+        if: ${{ (github.event_name == 'push') || (github.event_name != 'pull_request') }}
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
       # https://docs.github.com/en/actions/learn-github-actions/contexts#github-context
       - name: Tag and push image to Amazon ECR
-        if: github.event_name == 'push' or github.event_name != 'pull_request'
+        if: ${{ (github.event_name == 'push') || (github.event_name != 'pull_request') }}
         id: docker_tag
         env:
           ECR_ACCOUNT: ${{ secrets.aws_account }}
