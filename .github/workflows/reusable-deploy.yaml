@@ -66,7 +66,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: bitbuy-infrastructure/bb-cicd
-          ref: BBSECAWS-388
+          ref: main
           path: ./pipeline
 
       - uses: actions/setup-python@v3
