@@ -52,7 +52,7 @@ jobs:
       - name: Run chart-testing (list-changed)
         id: list-changed
         run: |
-          changed=$(ct list-changed --target-branch ${{ github.event.repository.default_branch }} --chart-dirs helm/chart)
+          changed=$(ct list-changed --target-branch ${{ github.event.repository.default_branch }} --chart-dirs helm)
           if [[ -n "$changed" ]]; then
             echo "::set-output name=changed::true"
           fi
