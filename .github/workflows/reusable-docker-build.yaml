@@ -50,6 +50,16 @@ jobs:
           role-skip-session-tagging: true
           role-to-assume: arn:aws:iam::${{ secrets.aws_account }}:role/${{ secrets.aws_assume_role }}
 
+      - name: Configure Maven Repo Credentials
+        uses: s4u/maven-settings-action@v2.6.0
+        with:
+          servers: |
+            [{
+                "id": "bitbuy-maven-repo",
+                "username": "bitbuyjenkins",
+                "password": "${{ secrets.GITHUB_TOKEN }}"
+            }]
+
       # - name: Test environment is configured with AWS credentials
       #   run: |
       #     aws sts get-caller-identity
