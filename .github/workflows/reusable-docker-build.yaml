@@ -87,7 +87,7 @@ jobs:
       - name: Docker Build and Push local
         id: docker_build
         run: |
-          docker build . -t localhost:5000/${{ inputs.repository_name }}:${{ inputs.deployment_tag }}
+          docker buildx build . -t localhost:5000/${{ inputs.repository_name }}:${{ inputs.deployment_tag }} --build-context m2=$HOME/.m2
           docker push localhost:5000/${{ inputs.repository_name }}:${{ inputs.deployment_tag }}
 
       # this needs to image to be in a repo
