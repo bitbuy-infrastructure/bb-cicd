@@ -59,6 +59,9 @@ jobs:
                 "username": "bitbuyjenkins",
                 "password": "${{ secrets.GITHUB_TOKEN }}"
             }]
+      
+      - name: Check Maven files
+        run: ls ~/.m2
 
       # - name: Test environment is configured with AWS credentials
       #   run: |
