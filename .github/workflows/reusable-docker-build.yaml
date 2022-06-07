@@ -74,7 +74,7 @@ jobs:
       - name: Docker Build and Push local
         id: docker_build
         run: |
-          docker build . -t localhost:5000/${{ inputs.repository_name }}:${{ inputs.deployment_tag }} --build-arg GITHUB_MAVEN_TOKEN=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
+          docker build . -t localhost:5000/${{ inputs.repository_name }}:${{ inputs.deployment_tag }} --build-arg GITHUB_MAVEN_TOKEN=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
           docker push localhost:5000/${{ inputs.repository_name }}:${{ inputs.deployment_tag }}
 
       # this needs to image to be in a repo
