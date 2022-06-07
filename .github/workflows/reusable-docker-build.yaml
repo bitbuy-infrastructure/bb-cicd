@@ -60,6 +60,13 @@ jobs:
                 "password": "${{ secrets.GITHUB_TOKEN }}"
             }]
 
+      - name: echo maven s4u/maven-settings-action
+        run: |
+        ls -lrta
+        pwd
+        ls -lrat ~/.m2
+        cat ~/.m2/settings.xml
+
       # - name: Test environment is configured with AWS credentials
       #   run: |
       #     aws sts get-caller-identity
