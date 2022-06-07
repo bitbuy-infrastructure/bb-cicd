@@ -21,8 +21,6 @@ on:
         required: true
       aws_assume_role:
         required: true
-      github_maven_token:
-        required: true
       aws_secret_access_key:
         required: true
       maven_github_token:
