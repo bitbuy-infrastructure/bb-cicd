@@ -56,8 +56,8 @@ jobs:
           servers: |
             [{
                 "id": "bitbuy-maven-repo",
-                "username": "bitbuyjenkins",
-                "password": "${{ secrets.GITHUB_TOKEN }}"
+                "username": "lukabuz",
+                "password": "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"
             }]
 
       - name: echo maven s4u/maven-settings-action
