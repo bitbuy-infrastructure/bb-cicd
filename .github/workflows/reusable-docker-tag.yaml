@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - id: short_sha
-        run: echo "::set-output name=short_sha::$(git rev-parse --short HEAD)"
+        run: echo "::set-output name=short_sha::$(git rev-parse --short HEAD | awk '{print tolower($0)})"
       - id: docker_tag
         run: echo "::set-output name=docker_tag::${{ github.ref_name }}-${{steps.short_sha.outputs.short_sha}}" | sed 's./.-.g'
     outputs:
