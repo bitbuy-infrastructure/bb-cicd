@@ -56,8 +56,8 @@ jobs:
           servers: |
             [{
                 "id": "bitbuy-maven-repo",
-                "username": "lukabuz",
-                "password": "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"
+                "username": "bitbuyjenkins",
+                "password": "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"
             }]
 
       - name: echo maven s4u/maven-settings-action
