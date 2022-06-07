@@ -86,6 +86,9 @@ jobs:
           path: ./${{ inputs.deployment_repo }}
           ref: ${{ inputs.deployment_branch }}
 
+      - name: Check if argoCD Folder exist
+        run: ls ./${{ inputs.deployment_repo }}
+
 # TODO make this a script
       - name: Update Tag and Push to ArgoCD
         id: deployment
