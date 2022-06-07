@@ -21,6 +21,8 @@ on:
         required: true
       aws_assume_role:
         required: true
+      github_maven_token:
+        required: true
       aws_secret_access_key:
         required: true
 
@@ -50,16 +52,6 @@ jobs:
           role-skip-session-tagging: true
           role-to-assume: arn:aws:iam::${{ secrets.aws_account }}:role/${{ secrets.aws_assume_role }}
 
-      - name: Configure Maven Repo Credentials
-        uses: s4u/maven-settings-action@v2.6.0
-        with:
-          servers: |
-            [{
-                "id": "bitbuy-maven-repo",
-                "username": "bitbuyjenkins",
-                "password": "${{ secrets.GITHUB_TOKEN }}"
-            }]
-
       # - name: Test environment is configured with AWS credentials
       #   run: |
       #     aws sts get-caller-identity
@@ -84,7 +76,7 @@ jobs:
       - name: Docker Build and Push local
         id: docker_build
         run: |
-          docker buildx build . -t localhost:5000/${{ inputs.repository_name }}:${{ inputs.deployment_tag }} --build-context m2=$HOME/.m2
+          docker build . -t localhost:5000/${{ inputs.repository_name }}:${{ inputs.deployment_tag }} --build-arg GITHUB_MAVEN_TOKEN=${{ secrets.github_maven_token }}
           docker push localhost:5000/${{ inputs.repository_name }}:${{ inputs.deployment_tag }}
 
       # this needs to image to be in a repo
