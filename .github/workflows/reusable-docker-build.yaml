@@ -111,7 +111,7 @@ jobs:
         env:
           ECR_ACCOUNT: ${{ secrets.aws_account }}
           ECR_REGION: ${{ env.AWS_REGION }}
-          ECR_REPOSITORY: ${ repo_name }
+          ECR_REPOSITORY: ${repo_name}
         run: |
           docker tag "localhost:5000/${ECR_REPOSITORY}:${{ inputs.deployment_tag }}" "${ECR_ACCOUNT}.dkr.ecr.${ECR_REGION}.amazonaws.com/${ECR_REPOSITORY}:${{ inputs.deployment_tag }}"
           docker push ${ECR_ACCOUNT}.dkr.ecr.${ECR_REGION}.amazonaws.com/${ECR_REPOSITORY}:${{ inputs.deployment_tag }}
