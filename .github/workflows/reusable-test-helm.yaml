@@ -1,4 +1,4 @@
-name: test-helm
+name: reusable-test-helm
 
 # when to run the this workflow
 on:
@@ -6,7 +6,6 @@ on:
   push:
     branches-ignore:
       - 'main'
-      - 'master'
   pull_request:
     branches:
       - '**'
