@@ -12,7 +12,7 @@ on:
         type: string
 
 jobs:
-  test-helm:
+  reusable-test-helm:
     runs-on: ubuntu-latest
     steps:
 
