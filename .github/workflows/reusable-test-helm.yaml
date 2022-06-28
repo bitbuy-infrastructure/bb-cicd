@@ -1,18 +1,18 @@
-name: test-helm
+name: reusable-test-helm
 
 # when to run the this workflow
 on:
-  workflow_dispatch:
-  push:
-    branches-ignore:
-      - 'main'
-      - 'master'
-  pull_request:
-    branches:
-      - '**'
+  workflow_call:
+    inputs:
+      aws_region:
+        required: true
+        type: string
+      helm_package_name:
+        required: true
+        type: string
 
 jobs:
-  test-helm:
+  reusable-test-helm:
     runs-on: ubuntu-latest
     steps:
 

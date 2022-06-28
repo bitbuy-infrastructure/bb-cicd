@@ -58,14 +58,14 @@ jobs:
           fi
 
       - name: helm chart build
-        if: steps.list-changed.outputs.changed == 'true'
+        if: ${{ (github.event_name == 'push') && (github.event_name != 'pull_request') }}
         run: |
           helm package helm/chart
 
       - name: Configure AWS Credentials
         id: aws-sts
         uses: aws-actions/configure-aws-credentials@v1
-        if: steps.list-changed.outputs.changed == 'true'
+        if: ${{ (github.event_name == 'push') && (github.event_name != 'pull_request') }}
         with:
           aws-access-key-id: ${{ secrets.aws_access_key_id }}
           aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
@@ -75,7 +75,7 @@ jobs:
           role-to-assume: arn:aws:iam::${{ secrets.aws_account }}:role/${{ secrets.aws_assume_role }}
 
       - name: aws ecr logging
-        if: steps.list-changed.outputs.changed == 'true' && github.event_name == 'push'
+        if: ${{ (github.event_name == 'push') && (github.event_name != 'pull_request') }}
         run: |
           aws ecr get-login-password \
           --region ${{ env.AWS_REGION }} | helm registry login \
@@ -83,7 +83,7 @@ jobs:
           --password-stdin ${{ secrets.aws_account }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
 
       - name: push helm chart to ecr
-        if: steps.list-changed.outputs.changed == 'true' && github.event_name == 'push'
+        if: ${{ (github.event_name == 'push') && (github.event_name != 'pull_request') }}
         run: |
           charts=$(ls *.tgz | xargs)
           helm push ${charts} oci://${{ secrets.aws_account }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/helm/
