@@ -2,13 +2,7 @@ name: reusable-test-helm
 
 # when to run the this workflow
 on:
-  workflow_dispatch:
-  push:
-    branches-ignore:
-      - 'main'
-  pull_request:
-    branches:
-      - '**'
+  workflow_call:
 
 jobs:
   test-helm:
