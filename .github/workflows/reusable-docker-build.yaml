@@ -25,6 +25,8 @@ on:
         required: true
       maven_github_token:
         required: true
+      submodule_gh_secret:
+        required: false
 
 env:
   # cluster vars
