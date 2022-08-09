@@ -60,6 +60,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           path: ./
+          submodules: recursive
 
       - name: Set up QEMU for multi Architecture Build
         uses: docker/setup-qemu-action@v1
