@@ -59,7 +59,7 @@ jobs:
       #     aws sts get-caller-identity
 
       - name: Checkout
-        if: ${{ secrets.submodule_gh_secret != '' }}
+        if: ${{ secrets.submodule_gh_secret == '' }}
         uses: actions/checkout@v2
         with:
           path: ./
