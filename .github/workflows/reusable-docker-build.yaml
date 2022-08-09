@@ -33,6 +33,7 @@ env:
   AWS_REGION: ${{ inputs.aws_region }}
   # TODO THIS WILL NEED A SCRIPT TO CHANGE... some how ...
   IMAGE_TAG: ${{ github.ref_name }}-${{ github.sha }}
+  SUBMODULE_GH_SECRET: ${{ secrets.submodule_gh_secret }}
 
 jobs:
   reusable-docker-build:
@@ -59,17 +60,17 @@ jobs:
       #     aws sts get-caller-identity
 
       - name: Checkout
-        if: ${{ secrets.submodule_gh_secret == '' }}
+        if: ${{ env.SUBMODULE_GH_SECRET == '' }}
         uses: actions/checkout@v2
         with:
           path: ./
           
       - name: Checkout with submodules
-        if: ${{ secrets.submodule_gh_secret != '' }}
+        if: ${{ env.SUBMODULE_GH_SECRET != '' }}
         uses: actions/checkout@v2
         with:
           path: ./
-          token: ${{ secrets.submodule_gh_secret }}
+          token: ${{ env.SUBMODULE_GH_SECRET }}
           submodules: recursive
 
       - name: Set up QEMU for multi Architecture Build
