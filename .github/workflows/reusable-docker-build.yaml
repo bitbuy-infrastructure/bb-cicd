@@ -25,6 +25,8 @@ on:
         required: true
       maven_github_token:
         required: true
+      submodule_gh_secret:
+        required: false
 
 env:
   # cluster vars
@@ -57,6 +59,13 @@ jobs:
       #     aws sts get-caller-identity
 
       - name: Checkout
+        if: ${{ !(secrets.submodule_gh_secret) }}
+        uses: actions/checkout@v2
+        with:
+          path: ./
+          
+      - name: Checkout with submodules
+        if: ${{ secrets.submodule_gh_secret }}
         uses: actions/checkout@v2
         with:
           path: ./
