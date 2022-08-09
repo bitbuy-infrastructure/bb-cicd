@@ -1,0 +1,59 @@
+name: db-migration
+description: create kubernetes job to run migration
+inputs:
+  namespace:
+    description: Kubernetes namespace to run migration on
+    required: true
+  repository_name:
+    description: name of repository, used to create migration job name
+    required: true
+  shared_folder:
+    description: name of path as if the workspace is shared
+    default: ''
+    required: false
+  pipeline_env:
+    description: pipeline environment e.g. pd np
+    required: true
+  pipeline_tenant:
+    description: pipeline tenant e.g. bbtd bbrp bbpd
+    required: true
+  pipeline_zone:
+    description: pipeline zone e.g. main01
+    required: true
+runs:
+  using: "composite"
+  steps:
+  - name: create job yaml based on environment
+    uses: nowactions/envsubst@v1
+    env:
+        NAMESPACE: ${{ inputs.namespace }}
+        REPO_NAME: ${{ inputs.repository_name }}
+        PIPELINE_ENV: ${{ inputs.pipeline_env }}
+        PIPELINE_TENANT: ${{ inputs.pipeline_tenant }}
+        PIPELINE_ZONE: ${{ inputs.pipeline_zone }}
+    with:
+      input: ./${{ inputs.shared_folder }}/migration/job.yaml.tmpl
+      # reference to example.job.yaml.tmpl
+      output: ./${{ inputs.shared_folder }}/migration/job.yaml
+  - name: migration
+    shell: bash
+    run: |
+      NAMESPACE=${{ inputs.namespace }}
+      MIGRATION_NAME=${{ inputs.repository_name }}-migration
+      SQL_DIR="${GITHUB_WORKSPACE}/${{ inputs.shared_folder }}/migration/scripts"
+      kubectl -n $NAMESPACE delete configmap $MIGRATION_NAME || echo "no migration configmap existing for deletion"
+      kubectl -n $NAMESPACE delete job $MIGRATION_NAME || echo "no migration job existing for deletion"
+      if [ `ls ${SQL_DIR}/*.sql 2>/dev/null | wc -l` -gt 0 ] ; then
+        pushd ${{ inputs.shared_folder }}/migration
+        kubectl -n $NAMESPACE delete configmap $MIGRATION_NAME || echo "no migration configmap existing for deletion"
+        ls  ${SQL_DIR}/*.sql | xargs printf ' --from-file %s ' | xargs kubectl -n $NAMESPACE create configmap $MIGRATION_NAME
+        kubectl -n $NAMESPACE create -f job.yml
+        if ! kubectl -n $NAMESPACE wait --for=condition=complete --timeout=180s job/$MIGRATION_NAME ; then
+            echo "$MIGRATION_NAME run failed:"
+            kubectl -n $NAMESPACE describe job $MIGRATION_NAME
+            exit 1
+        fi
+        popd
+      else
+        kubectl -n $NAMESPACE create configmap $MIGRATION_NAME
+      fi
