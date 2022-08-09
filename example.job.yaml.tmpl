@@ -1,0 +1,70 @@
+---
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: ${REPO_NAME}-migration
+spec:
+  provider: aws
+  secretObjects:
+    - secretName: ${REPO_NAME}-migration-secrets
+      type: Opaque
+      data:
+        - key: DATABASE_URL
+          objectName: DATABASE_URL
+        - key: DATABASE_USERNAME
+          objectName: DATABASE_USERNAME
+        - key: DATABASE_PASSWORD
+          objectName: DATABASE_PASSWORD
+  parameters:
+      objects: |
+        - objectName: /${PIPELINE_TENANT}/${PIPELINE_ENV}/${PIPELINE_ZONE}/${NAMESPACE}/${REPO_NAME}
+          objectType: "secretsmanager"
+          jmesPath:
+            - path: DATABASE_URL
+              objectAlias: DATABASE_URL
+            - path: DATABASE_USERNAME
+              objectAlias: DATABASE_USERNAME
+            - path: DATABASE_PASSWORD
+              objectAlias: DATABASE_PASSWORD
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ${REPO_NAME}-migration
+spec:
+  template:
+    spec:
+      containers:
+        - name: flyway
+          image: flyway/flyway:7.4.0
+          args:
+            - info
+            - repair
+            - migrate
+            - info
+          env:
+            - name: FLYWAY_URL
+              valueFrom:
+                secretKeyRef:
+                  name: ${REPO_NAME}-migration-secrets
+                  key: DATABASE_URL
+            - name: FLYWAY_OUT_OF_ORDER
+              value: "true"
+            - name: FLYWAY_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ${REPO_NAME}-migration-secrets
+                  key: DATABASE_USERNAME
+            - name: FLYWAY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ${REPO_NAME}-migration-secrets
+                  key: DATABASE_PASSWORD
+          volumeMounts:
+            - mountPath: /flyway/sql
+              name: sqlfiles
+      volumes:
+        - name: sqlfiles
+          configMap:
+            name: ${REPO_NAME}-migration
+      restartPolicy: Never
