@@ -65,7 +65,7 @@ jobs:
           path: ./
           
       - name: Checkout with submodules
-        if: ${{ secrets.submodule_gh_secret }}
+        if: ${{ secrets.submodule_gh_secret != '' }}
         uses: actions/checkout@v2
         with:
           path: ./
