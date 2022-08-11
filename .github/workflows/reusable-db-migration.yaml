@@ -69,7 +69,7 @@ jobs:
           aws-region: ${{ inputs.aws_region }}
 
       - name: Setup binaries(aws-cli/kustomize/iam-authenticator)
-        uses: ./.github/actions/setup-aws-kustomize
+        uses: bitbuy-infrastructure/bb-cicd/.github/actions/setup-aws-kustomize@main
         with:
           cluster-authentication-role-arn: ${{ secrets.aws_assume_role }}
           cluster-name: ${{ inputs.cluster_name }}
@@ -82,7 +82,7 @@ jobs:
       
       - name: Database migration
         if: ${{ env.SUBMODULE_GH_SECRET == '' }}
-        uses: ./.github/actions/db-migration
+        uses: bitbuy-infrastructure/bb-cicd/.github/actions/db-migration@main
         with:
           namespace: ${{ inputs.namespace }}
           repository_name: ${{ inputs.repository_name }}
@@ -92,7 +92,7 @@ jobs:
       
       - name: Database migration with submodule
         if: ${{ env.SUBMODULE_GH_SECRET != '' }}
-        uses: ./.github/actions/db-migration
+        uses: bitbuy-infrastructure/bb-cicd/.github/actions/db-migration@main
         with:
           namespace: ${{ inputs.namespace }}
           repository_name: ${{ inputs.repository_name }}
