@@ -44,6 +44,9 @@ conf = hiyapyco.load(
 
 conf[service_name]['image']['tag'] = DEPLOYMENT_TAG
 
+if "flywayImage" in conf[service_name]:
+    conf[service_name]['flywayImage']['tag'] = DEPLOYMENT_TAG
+
 output = yaml.safe_load(hiyapyco.dump(conf, default_flow_style=False))
 
 logger.debug(output)
