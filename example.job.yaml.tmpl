@@ -63,8 +63,17 @@ spec:
           volumeMounts:
             - mountPath: /flyway/sql
               name: sqlfiles
+            - name: secrets-store-inline
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
       volumes:
         - name: sqlfiles
           configMap:
             name: ${REPO_NAME}-migration
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: ${REPO_NAME}-migration
       restartPolicy: Never
