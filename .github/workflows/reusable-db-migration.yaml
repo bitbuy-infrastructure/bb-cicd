@@ -71,7 +71,7 @@ jobs:
       - name: Setup binaries(aws-cli/kustomize/iam-authenticator)
         uses: bitbuy-infrastructure/bb-cicd/.github/actions/setup-aws-kustomize@main
         with:
-          cluster-authentication-role-arn: ${{ secrets.aws_assume_role }}
+          cluster-authentication-role-arn: arn:aws:iam::${{ secrets.aws_account }}:role/${{ secrets.aws_assume_role }}
           cluster-name: ${{ inputs.cluster_name }}
           region: ${{ inputs.aws_region }}
 
