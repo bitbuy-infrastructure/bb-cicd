@@ -1,0 +1,53 @@
+# lots of ideas from here: https://github.com/dflook/terraform-github-actions
+---
+name: "reusable-check-image"
+
+on:
+  workflow_call:
+    inputs:
+      aws_region:
+        required: true
+        type: string
+      deployment_tag:
+        required: true
+        type: string
+    secrets:
+      aws_access_key_id:
+        required: true
+      aws_account:
+        required: true
+      aws_assume_role:
+        required: true
+      aws_secret_access_key:
+        required: true
+
+env:
+  AWS_REGION: ${{ inputs.aws_region }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.aws_access_key_id }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_access_key }}
+  AWS_ACCOUNT: ${{ secrets.aws_account }}
+  AWS_ASSUME_ROLE: ${{ secrets.aws_assume_role }}
+
+jobs:
+  reusable-check-image:
+    runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT }}:role/${{ env.AWS_ASSUME_ROLE }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Get container image
+        run: aws ecr describe-images --repository-name=test/${{ github.repository }} --image-ids=imageTag=${{ inputs.deployment_tag }}
