@@ -20,7 +20,7 @@ on:
         value: ${{ jobs.get_tag.outputs.docker_tag }}
 
 jobs:
-  get-tag:
+  reusable-get-tag:
     runs-on: ubuntu-latest
     services:
       registry:
