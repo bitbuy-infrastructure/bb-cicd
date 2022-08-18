@@ -55,4 +55,5 @@ jobs:
         run: |
           echo "ECR_REPOSITORY=${repo_name,,}" >> ${GITHUB_ENV}
       - name: Get container image
-        run: aws ecr describe-images --repository-name=${ ECR_REPOSITORY } --image-ids=imageTag=${{ inputs.deployment_tag }}
+        run: |
+          aws ecr describe-images --repository-name=${ECR_REPOSITORY} --image-ids=imageTag=${{ inputs.deployment_tag }}
