@@ -17,7 +17,7 @@ on:
         required: true
     outputs:
       docker_tag:
-        value: ${{ jobs.get_tag.outputs.docker_tag }}
+        value: ${{ jobs.reusable-get-tag.outputs.docker_tag }}
 
 jobs:
   reusable-get-tag:
