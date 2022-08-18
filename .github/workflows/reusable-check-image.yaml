@@ -50,4 +50,4 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
       - name: Get container image
-        run: aws ecr describe-images --repository-name=test/${{ github.repository }} --image-ids=imageTag=${{ inputs.deployment_tag }}
+        run: aws ecr describe-images --repository-name=${{ github.repository }} --image-ids=imageTag=${{ inputs.deployment_tag }}
