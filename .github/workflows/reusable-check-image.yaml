@@ -29,7 +29,7 @@ env:
   AWS_ASSUME_ROLE: ${{ secrets.aws_assume_role }}
 
 jobs:
-  reusable-check-image:
+  check-image:
     runs-on: ubuntu-latest
     services:
       registry:

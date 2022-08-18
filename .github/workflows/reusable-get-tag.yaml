@@ -1,0 +1,52 @@
+# lots of ideas from here: https://github.com/dflook/terraform-github-actions
+---
+name: "reusable-get-tag"
+
+on:
+  workflow_call:
+    inputs:
+      branch:
+        description: 'GitHub branch to be used for checkout e.g. main'
+        default: main
+        type: string
+        required: true
+      sha:
+        description: 'GitHub commit short SHA e.g. latest or fc9ba34'
+        default: latest
+        type: string
+        required: true
+    outputs:
+      docker_tag:
+        value: ${{ jobs.get_tag.outputs.docker_tag }}
+
+jobs:
+  get-tag:
+    runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ inputs.branch }}
+      - name: Get latest SHA
+        id: latest_short_sha
+        if: ${{ inputs.sha == 'latest' }}
+        run: echo "::set-output name=short_sha::$(git rev-parse --short HEAD)"
+      - name: Get latest docker tag
+        id: latest_docker_tag
+        if: ${{ inputs.sha == 'latest' }}
+        run: echo "::set-output name=docker_tag::${{ inputs.branch }}-${{steps.latest_short_sha.outputs.short_sha}}" | sed 's./.-.g' | awk '{print tolower($0)}'
+      - name: Get input docker tag
+        id: input_docker_tag
+        if: ${{ inputs.sha != 'latest' }}
+        run: echo "::set-output name=docker_tag::$(echo ${{ inputs.branch }}-${{ inputs.sha }})"
+      - name: Get final docker tag
+        id: final_docker_tag
+        run: echo "::set-output name=docker_tag::$(echo ${{ steps.latest_docker_tag.outputs.docker_tag }} ${{ steps.input_docker_tag.outputs.docker_tag }} | xargs)"
+      - name: Check docker tag
+        run: echo ${{ steps.final_docker_tag.outputs.docker_tag }}
+    outputs:
+      docker_tag: ${{steps.final_docker_tag.outputs.docker_tag}}
