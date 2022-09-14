@@ -10,9 +10,6 @@ on:
       branch_name:
         type: string
         required: true
-      pipeline_environment:
-        required: true
-        type: string
     outputs:
       short_sha:
         description: "Short sha as string"
