@@ -16,10 +16,10 @@ on:
     outputs:
       short_sha:
         description: "Short sha as string"
-        value: ${{ jobs.docker_tag.outputs.short_sha }}
+        value: ${{ jobs.docker_tag_branch.outputs.short_sha }}
       docker_tag:
         description: "docker image tag"
-        value: ${{ jobs.docker_tag.outputs.docker_tag }}
+        value: ${{ jobs.docker_tag_branch.outputs.docker_tag }}
 
 jobs:
   docker_tag_branch:
