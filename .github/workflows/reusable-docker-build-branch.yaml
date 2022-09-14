@@ -17,6 +17,9 @@ on:
       repository_name:
         required: true
         type: string
+      pipeline_environment:
+        required: true
+        type: string
     secrets:
       aws_access_key_id:
         required: true
