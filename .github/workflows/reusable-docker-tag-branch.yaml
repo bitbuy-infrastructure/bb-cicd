@@ -24,6 +24,7 @@ on:
 jobs:
   docker_tag_branch:
     runs-on: ubuntu-latest
+    environment: "${{ inputs.pipeline_environment }}"
     steps:
       - uses: actions/checkout@v2
         with:
