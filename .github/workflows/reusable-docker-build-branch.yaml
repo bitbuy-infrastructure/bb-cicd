@@ -44,7 +44,6 @@ env:
 jobs:
   reusable-docker-build-branch:
     runs-on: ubuntu-latest
-    environment: "${{ inputs.pipeline_environment }}"
     services:
       registry:
         image: registry:2
