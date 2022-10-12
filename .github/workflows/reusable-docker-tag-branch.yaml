@@ -26,9 +26,16 @@ jobs:
         with:
           ref: ${{ inputs.branch_name }}
       - id: short_sha
-        run: echo "::set-output name=short_sha::$(git rev-parse --short HEAD)"
+        run: echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
       - id: docker_tag
-        run: echo "::set-output name=docker_tag::${{ github.ref_name }}-${{steps.short_sha.outputs.short_sha}}" | sed 's./.-.g' | awk '{print tolower($0)}'
+        run: |
+          echo 'docker_tag<<EOF' >> $GITHUB_ENV
+          echo ${{ github.ref_name }}-${{env.short_sha}} >> $GITHUB_ENV
+          sed 's./.-.g' >> $GITHUB_ENV
+          awk '{print tolower($0)}' >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+      - id: show_tag
+        run: echo "${{env.docker_tag}}"
     outputs:
-      short_sha: ${{steps.short_sha.outputs.short_sha}}
-      docker_tag: ${{steps.docker_tag.outputs.docker_tag}}
+      short_sha: ${{env.short_sha}}
+      docker_tag: ${{env.docker_tag}}
