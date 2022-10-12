@@ -18,7 +18,7 @@ jobs:
   docker_tag:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - id: short_sha
         run: echo "::set-output name=short_sha::$(git rev-parse --short HEAD)"
       - id: docker_tag

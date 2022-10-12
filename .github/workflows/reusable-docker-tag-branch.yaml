@@ -22,7 +22,7 @@ jobs:
   docker_tag_branch:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: ${{ inputs.branch_name }}
       - id: short_sha
