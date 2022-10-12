@@ -41,7 +41,6 @@ jobs:
                 'pipeline_zone': 'main01',
               }
             }
-          print(f'::set-output name=params::{params!s}')
-          print(f'{params}')
+          print(f'params={params!s} >> $GITHUB_ENV')
     outputs:
-      params: ${{ steps.params.outputs.params }}
+      params: ${{ env.params }}

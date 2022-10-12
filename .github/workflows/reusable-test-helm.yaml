@@ -40,12 +40,12 @@ jobs:
         run: |
           changed=$(ct list-changed --target-branch ${{ github.event.repository.default_branch }} helm )
           if [[ -n "$changed" ]]; then
-            echo "::set-output name=changed::true"
+            echo "changed=true" >> $GITHUB_ENV
           fi
 
       - name: Run chart-testing (lint)
         id: helm-lint
-        if: steps.list-changed.outputs.changed == 'true'
+        if: env.changed == 'true'
         run: |
           ct lint --chart-dirs helm/ --debug --target-branch ${{ github.event.repository.default_branch }} --config helm/test/ct.yaml
 

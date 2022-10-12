@@ -34,19 +34,24 @@ jobs:
       - name: Get latest SHA
         id: latest_short_sha
         if: ${{ inputs.sha == 'latest' }}
-        run: echo "::set-output name=short_sha::$(git rev-parse --short HEAD)"
+        run: echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
       - name: Get latest docker tag
         id: latest_docker_tag
         if: ${{ inputs.sha == 'latest' }}
-        run: echo "::set-output name=docker_tag::${{ inputs.branch }}-${{steps.latest_short_sha.outputs.short_sha}}" | sed 's./.-.g' | awk '{print tolower($0)}'
+        run: |
+          echo 'latest_docker_tag<<EOF' >> $GITHUB_ENV
+          echo ${{ inputs.branch }}-${{env.short_sha}} >> $GITHUB_ENV
+          sed 's./.-.g' >> $GITHUB_ENV
+          awk '{print tolower($0)}' >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
       - name: Get input docker tag
         id: input_docker_tag
         if: ${{ inputs.sha != 'latest' }}
-        run: echo "::set-output name=docker_tag::$(echo ${{ inputs.branch }}-${{ inputs.sha }})"
+        run: echo "input_docker_tag=$(echo ${{ inputs.branch }}-${{ inputs.sha }})" >> $GITHUB_ENV
       - name: Get final docker tag
         id: final_docker_tag
-        run: echo "::set-output name=docker_tag::$(echo ${{ steps.latest_docker_tag.outputs.docker_tag }} ${{ steps.input_docker_tag.outputs.docker_tag }} | xargs)"
+        run: echo "docker_tag=$(echo ${{ env.input_docker_tag }} ${{ env.latest_docker_tag }} | xargs)" >> $GITHUB_ENV
       - name: Check docker tag
-        run: echo ${{ steps.final_docker_tag.outputs.docker_tag }}
+        run: echo ${{ env.docker_tag }}
     outputs:
-      docker_tag: ${{steps.final_docker_tag.outputs.docker_tag}}
+      docker_tag: ${{env.docker_tag}}
