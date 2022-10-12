@@ -57,13 +57,13 @@ jobs:
 
       - name: Checkout
         if: ${{ env.SUBMODULE_GH_SECRET == '' }}
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: ./
           
       - name: Checkout with submodules
         if: ${{ env.SUBMODULE_GH_SECRET != '' }}
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: ./
           token: ${{ env.SUBMODULE_GH_SECRET }}
