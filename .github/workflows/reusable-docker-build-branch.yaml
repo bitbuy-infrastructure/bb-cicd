@@ -79,13 +79,13 @@ jobs:
           submodules: recursive
 
       - name: Set up QEMU for multi Architecture Build
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
 
       # https://github.com/docker/setup-buildx-action
       # TODO set a version here (not latest)
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
         with:
           version: latest
           driver-opts: network=host
