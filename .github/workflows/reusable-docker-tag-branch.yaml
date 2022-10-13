@@ -30,7 +30,7 @@ jobs:
       - id: docker_tag
         run: |
           echo 'docker_tag<<EOF' >> $GITHUB_ENV
-          echo ${{ inputs.branch_name }}-${{env.short_sha}} >> $GITHUB_ENV
+          echo ${{ github.ref_name }}-${{env.short_sha}} >> $GITHUB_ENV
           sed 's./.-.g' >> $GITHUB_ENV
           awk '{print tolower($0)}' >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
