@@ -27,12 +27,10 @@ jobs:
           ref: ${{ inputs.branch_name }}
       - id: short_sha
         run: echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-      - id: extract_branch
-        run: echo "reference_branch_name=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
       - id: docker_tag
         run: |
           echo 'docker_tag<<EOF' >> $GITHUB_ENV
-          echo ${{ env.reference_branch_name }}-${{env.short_sha}} >> $GITHUB_ENV
+          echo ${{ inputs.branch_name }}-${{env.short_sha}} >> $GITHUB_ENV
           sed 's./.-.g' >> $GITHUB_ENV
           awk '{print tolower($0)}' >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
