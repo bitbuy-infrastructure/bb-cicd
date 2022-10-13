@@ -2,23 +2,29 @@
 # https://dev.to/tomassirio/make-changes-on-repository-a-while-modifying-repository-b-github-actions-is-here-50g8
 # https://docs.github.com/en/actions/using-workflows/reusing-workflows#using-outputs-from-a-reusable-workflow
 ---
-name: "reusable-docker-tag"
+name: "reusable-docker-tag-branch"
 
 on:
   workflow_call:
+    inputs:
+      branch_name:
+        type: string
+        required: true
     outputs:
       short_sha:
         description: "Short sha as string"
-        value: ${{ jobs.docker_tag.outputs.short_sha }}
+        value: ${{ jobs.docker_tag_branch.outputs.short_sha }}
       docker_tag:
         description: "docker image tag"
-        value: ${{ jobs.docker_tag.outputs.docker_tag }}
+        value: ${{ jobs.docker_tag_branch.outputs.docker_tag }}
 
 jobs:
-  docker_tag:
+  docker_tag_branch:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.branch_name }}
       - id: short_sha
         run: echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
       - id: docker_tag
