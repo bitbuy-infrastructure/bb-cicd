@@ -76,7 +76,6 @@ jobs:
           submodules: recursive
 
       - name: Add Github Registry Auth Token
-        if: ${{ secrets.npm_token != '' }}
         run: |
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.npm_token }}" >> ~/.npmrc
           echo "@monitexinc:registry=https://npm.pkg.github.com" >> ~/.npmrc
