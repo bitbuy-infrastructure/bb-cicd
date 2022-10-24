@@ -79,9 +79,9 @@ jobs:
       - name: Add Github Registry Auth Token
         if: ${{ env.NPM_TOKEN != '' }}
         run: |
-          echo "//npm.pkg.github.com/:_authToken=${{ env.NPM_TOKEN }}" >> ~/.npmrc
-          echo "@monitexinc:registry=https://npm.pkg.github.com" >> ~/.npmrc
-          echo "registry=https://registry.npmjs.org" >> ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ env.NPM_TOKEN }}" >> ./.npmrc
+          echo "@monitexinc:registry=https://npm.pkg.github.com" >> ./.npmrc
+          echo "registry=https://registry.npmjs.org" >> ./.npmrc
 
       - name: Set up QEMU for multi Architecture Build
         uses: docker/setup-qemu-action@v2
