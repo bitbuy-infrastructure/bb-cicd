@@ -27,6 +27,8 @@ on:
         required: true
       submodule_gh_secret:
         required: false
+      npm_token:
+        required: false
 
 env:
   # cluster vars
@@ -72,6 +74,13 @@ jobs:
           path: ./
           token: ${{ env.SUBMODULE_GH_SECRET }}
           submodules: recursive
+
+      - name: Add Github Registry Auth Token
+        if: ${{ secrets.npm_token != '' }}
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.npm_token }}" >> ~/.npmrc
+          echo "@monitexinc:registry=https://npm.pkg.github.com" >> ~/.npmrc
+          echo "registry=https://registry.npmjs.org" >> ~/.npmrc
 
       - name: Set up QEMU for multi Architecture Build
         uses: docker/setup-qemu-action@v2
