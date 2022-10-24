@@ -36,6 +36,7 @@ env:
   # TODO THIS WILL NEED A SCRIPT TO CHANGE... some how ...
   IMAGE_TAG: ${{ github.ref_name }}-${{ github.sha }}
   SUBMODULE_GH_SECRET: ${{ secrets.submodule_gh_secret }}
+  NPM_TOKEN: ${{ secrets.npm_token }}
 
 jobs:
   reusable-docker-build:
@@ -76,8 +77,9 @@ jobs:
           submodules: recursive
 
       - name: Add Github Registry Auth Token
+        if: ${{ env.NPM_TOKEN != '' }}
         run: |
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.npm_token }}" >> ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ env.NPM_TOKEN }}" >> ~/.npmrc
           echo "@monitexinc:registry=https://npm.pkg.github.com" >> ~/.npmrc
           echo "registry=https://registry.npmjs.org" >> ~/.npmrc
 
