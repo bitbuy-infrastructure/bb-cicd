@@ -1,0 +1,83 @@
+name: Reusable Publish Java Package
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version to publish (e.g. 1.0.0, 2.1.2-SNAPSHOT, 3.0.10-RELEASE)'
+        type: string
+        required: true
+      name:
+        description: 'Name of the package'
+        type: string
+        required: true
+    secrets:
+      aws-access-key-id:
+        description: 'AWS Access Key ID for github actions user'
+        required: true
+      aws-secret-access-key:
+        description: 'AWS Secret Access Key ID for github actions user'
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest 
+    permissions: 
+      contents: read
+      packages: write 
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: 'adopt'
+      - name: Setup protobuf
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler
+          ln -s /usr/bin/protoc /usr/local/bin/protoc
+      - name: Configure AWS Credentials For GitHub Actions
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.aws-access-key-id }}
+          aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
+          aws-region: us-east-2
+          role-to-assume: arn:aws:iam::972594475906:role/GithubToCodeArtifactRepo
+          role-duration-seconds: 3600
+          role-session-name: GithubToCodeArtifactRepo
+      - name: Set up codeartifact
+        run: |
+          CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain bb-maven-repo --domain-owner 972594475906 --query authorizationToken --output text)
+          echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: Generate settings.xml for Maven Builds
+        uses: whelk-io/maven-settings-xml-action@v21
+        with:
+          repositories: '[{ "id": "bb-maven-repo", "url": "https://bb-maven-repo-972594475906.d.codeartifact.us-east-2.amazonaws.com/maven/bb-maven-repo/" }]'
+          servers: '[{ "id": "bb-maven-repo", "username": "aws", "password": "${{env.CODEARTIFACT_AUTH_TOKEN}}" }]'
+      - name: Depcheck
+        uses: dependency-check/Dependency-Check_Action@main
+        id: Depcheck
+        with:
+          project: ${{ inputs.name }}
+          path: .
+          format: HTML
+          out: reports
+          args: >
+            --failOnCVSS 7
+            --suppression ./owasp-suppressions.xml
+        env:
+          JAVA_HOME: /opt/jdk
+      - name: Upload Test results
+        uses: actions/upload-artifact@master
+        with:
+           name: Depcheck report
+           path: ${{github.workspace}}/reports
+      - name: Prepare release
+        run: mvn versions:set -DnewVersion=${{ inputs.version }} -Ddependency-check.skip=true
+      - name: Publish package
+        run: mvn --batch-mode deploy -DskipTests -Ddependency-check.skip=true
