@@ -10,6 +10,11 @@ on:
         description: 'Name of the package'
         type: string
         required: true
+      java-version:
+        description: 'Java version to use (e.g. 11, 8)'
+        type: string
+        required: false
+        default: '11'
     secrets:
       aws-access-key-id:
         description: 'AWS Access Key ID for github actions user'
@@ -28,7 +33,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-java@v2
         with:
-          java-version: '8'
+          java-version: ${{ inputs.java-version }}
           distribution: 'adopt'
       - name: Setup protobuf
         run: |
