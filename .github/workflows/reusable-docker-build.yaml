@@ -60,7 +60,7 @@ jobs:
 
       - name: Set up codeartifact
         run: |
-          CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain bb-maven-repo --domain-owner 972594475906 --query authorizationToken --output text)
+          CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain bb-maven-repo --domain-owner 972594475906 --query authorizationToken --region us-east-2 --output text)
           echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
 
       - name: Checkout
