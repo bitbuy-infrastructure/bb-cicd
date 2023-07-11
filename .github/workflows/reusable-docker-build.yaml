@@ -58,9 +58,10 @@ jobs:
           role-skip-session-tagging: true
           role-to-assume: arn:aws:iam::${{ secrets.aws_account }}:role/${{ secrets.aws_assume_role }}
 
-      # - name: Test environment is configured with AWS credentials
-      #   run: |
-      #     aws sts get-caller-identity
+      - name: Set up codeartifact
+        run: |
+          CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain bb-maven-repo --domain-owner 972594475906 --query authorizationToken --output text)
+          echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
 
       - name: Checkout
         if: ${{ env.SUBMODULE_GH_SECRET == '' }}
@@ -104,7 +105,9 @@ jobs:
       - name: Docker Build and Push local
         id: docker_build
         run: |
-          docker build . -t localhost:5000/${ECR_REPOSITORY}:${{ inputs.deployment_tag }} --build-arg MAVEN_GITHUB_TOKEN=${{ secrets.maven_github_token }}
+          docker build . -t localhost:5000/${ECR_REPOSITORY}:${{ inputs.deployment_tag }} \
+            --build-arg MAVEN_GITHUB_TOKEN=${{ secrets.maven_github_token }} \
+            --build-arg CODEARTIFACT_AUTH_TOKEN=${{ env.CODEARTIFACT_AUTH_TOKEN }}
           docker push localhost:5000/${ECR_REPOSITORY}:${{ inputs.deployment_tag }}
 
       # this needs to image to be in a repo
