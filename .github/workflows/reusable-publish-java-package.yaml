@@ -38,7 +38,7 @@ jobs:
       - name: Setup protobuf
         run: |
           sudo apt-get update
-          sudo apt-get install -y protobuf-compiler=3.20.3
+          sudo apt-get install -y protobuf-compiler
           ln -s /usr/bin/protoc /usr/local/bin/protoc
           protoc --version
       - name: Configure AWS Credentials For GitHub Actions
