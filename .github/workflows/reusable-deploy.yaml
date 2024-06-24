@@ -110,4 +110,4 @@ jobs:
           git config --local user.name "GitHub Action"
           git diff-index --quiet HEAD || git commit -am "update deployment for ${{ inputs.pipeline_tenant }} ${{ inputs.pipeline_env }} ${{ inputs.pipeline_zone }} ${{ github.repository }} ${{ inputs.deployment_tag }}"
           git push --force
-        if: github.event_name != 'pull_request'
+        
