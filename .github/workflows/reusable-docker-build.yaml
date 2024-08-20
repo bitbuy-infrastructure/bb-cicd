@@ -35,7 +35,9 @@ env:
   IMAGE_TAG: ${{ github.ref_name }}-${{ github.sha }}
   NPM_TOKEN: ${{ secrets.npm_token }}
 
-
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   reusable-docker-build:
@@ -45,10 +47,6 @@ jobs:
         image: registry:2
         ports:
           - 5000:5000
-
-    permissions:
-      id-token: write
-      contents: read
 
     steps:
       - name: Configure AWS Credentials
