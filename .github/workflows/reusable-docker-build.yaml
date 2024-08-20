@@ -1,107 +1,135 @@
 # lots of ideas from here: https://github.com/dflook/terraform-github-actions
 ---
-  name: "reusable-docker-build"
-  
-  on:
-    workflow_call:
-      inputs:
-        aws_region:
-          required: true
-          type: string
-        deployment_tag:
-          required: true
-          type: string
-        repository_name:
-          required: true
-          type: string
-      secrets:
-        aws_account:
-          required: true
-        aws_assume_role:
-          required: true
-        token:
-          required: false
-        npm_token:
-          required: false
-        gh_user:
-          required: false
-        maven_github_token:
-          required: false
-  
-  env:
-    AWS_REGION: ${{ inputs.aws_region }}
-    NPM_TOKEN: ${{ secrets.npm_token }}
-  
-  permissions:
-    id-token: write
-    contents: read
-  
-  jobs:
-    reusable-docker-build:
-      runs-on: ubuntu-latest
-  
-      steps:
-        - name: Configure AWS Credentials
-          uses: aws-actions/configure-aws-credentials@v4
-          with:
-            role-to-assume: arn:aws:iam::${{ secrets.aws_account }}:role/${{ secrets.aws_assume_role }}
-            role-session-name: GitHub_to_AWS_via_FederatedOIDC
-            aws-region: ${{ env.AWS_REGION }}
-  
-        - name: Checkout
-          uses: actions/checkout@v4
-          with:
-            path: ./
-  
-        - name: Add Github Registry Auth Token
-          if: ${{ env.NPM_TOKEN != '' }}
-          run: |
-            echo "//npm.pkg.github.com/:_authToken=${{ env.NPM_TOKEN }}" > ./.npmrc
-            echo "@coinsquarex:registry=https://npm.pkg.github.com" >> ./.npmrc
-            echo "registry=https://registry.npmjs.org" >> ./.npmrc
-            # HACK: Needed so that yarn install doesn't fail for internal NPM packages
-            echo 'registry "https://npm.pkg.github.com"' > .yarnrc
-  
-        - name: Set up QEMU for multi Architecture Build
-          uses: docker/setup-qemu-action@v3
-  
-        - name: Set up Docker Buildx
-          id: buildx
-          uses: docker/setup-buildx-action@v3.1.0
-          with:
-            version: latest
-            driver-opts: |
-              network=host
-              image=moby/buildkit:v0.13.0
-  
-        - name: Login to Amazon ECR
-          id: login-ecr
-          uses: docker/login-action@v3
-          with:
-            registry: ${{ secrets.aws_account }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
-  
-        - name: Set tag for branch
-          run: |
-            if [[ "${{ github.ref }}" == "refs/heads/master" || "${{ github.ref }}" == "refs/heads/main" ]]; then
-              echo "ecr_tag=stable" >> "$GITHUB_ENV"
-            else
-              echo "ecr_tag=latest" >> "$GITHUB_ENV"
-            fi
-  
-        - name: Docker Build & Push ECR
-          id: docker_builds
-          uses: docker/build-push-action@v5
-          with:
-            context: .
-            push: true
-            tags: |
-              ${{ secrets.aws_account }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ inputs.repository_name }}:${{ inputs.deployment_tag }}
-              ${{ secrets.aws_account }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ inputs.repository_name }}:${{env.ecr_tag}}
-            cache-from: type=gha
-            cache-to: type=gha,mode=max
-            build-args: |
-               GITHUB_ACCESS_TOKEN=${{ secrets.token || '' }}
-               GITHUB_USER=${{ secrets.gh_user || '' }}
-               MAVEN_GITHUB_TOKEN=${{ secrets.maven_github_token || '' }}
-  
-  
+name: "reusable-docker-build"
+
+on:
+  workflow_call:
+    inputs:
+      aws_region:
+        required: true
+        type: string
+      deployment_tag:
+        required: true
+        type: string
+      repository_name:
+        required: true
+        type: string
+    secrets:
+      aws_access_key_id:
+        required: true
+      aws_account:
+        required: true
+      aws_assume_role:
+        required: true
+      aws_secret_access_key:
+        required: true
+      maven_github_token:
+        required: true
+      submodule_gh_secret:
+        required: false
+      npm_token:
+        required: false
+
+env:
+  # cluster vars
+  AWS_REGION: ${{ inputs.aws_region }}
+  # TODO THIS WILL NEED A SCRIPT TO CHANGE... some how ...
+  IMAGE_TAG: ${{ github.ref_name }}-${{ github.sha }}
+  SUBMODULE_GH_SECRET: ${{ secrets.submodule_gh_secret }}
+  NPM_TOKEN: ${{ secrets.npm_token }}
+
+jobs:
+  reusable-docker-build:
+    runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.aws_account }}:role/${{ secrets.aws_assume_role }}
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set up codeartifact
+        run: |
+          CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain bb-maven-repo --domain-owner 972594475906 --query authorizationToken --region us-east-2 --output text)
+          echo "CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN" >> $GITHUB_ENV
+
+      - name: Add Github Registry Auth Token
+        if: ${{ env.NPM_TOKEN != '' }}
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ env.NPM_TOKEN }}" >> ./.npmrc
+          echo "@monitexinc:registry=https://npm.pkg.github.com" >> ./.npmrc
+          echo "registry=https://registry.npmjs.org" >> ./.npmrc
+
+      - name: Set up QEMU for multi Architecture Build
+        uses: docker/setup-qemu-action@v3
+
+      # https://github.com/docker/setup-buildx-action
+      # TODO set a version here (not latest)
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3.1.0
+        with:
+          version: latest
+          driver-opts: |
+            network=host
+            image=moby/buildkit:v0.13.0
+
+      # - name: Downcase REPO
+      #   env:
+      #     repo_name_original: "${{ inputs.repository_name }}"
+      #   run: |
+      #     echo "ECR_REPOSITORY=${repo_name_original,,}" >> ${GITHUB_ENV}
+
+      # - name: Docker Build and Push local
+      #   id: docker_build
+      #   run: |
+      #     docker build . -t localhost:5000/${ECR_REPOSITORY}:${{ inputs.deployment_tag }} \
+      #       --build-arg MAVEN_GITHUB_TOKEN=${{ secrets.maven_github_token }} \
+      #       --build-arg CODEARTIFACT_AUTH_TOKEN=${{ env.CODEARTIFACT_AUTH_TOKEN }}
+      #     docker push localhost:5000/${ECR_REPOSITORY}:${{ inputs.deployment_tag }}
+
+      # this needs to image to be in a repo
+      # - name: Docker Inspect
+      #   run: |
+      #     docker buildx imagetools inspect localhost:5000/${ECR_REPOSITORY}:${{ inputs.deployment_tag }}
+
+      - name: Login to Amazon ECR
+        if: ${{ (github.event_name == 'push') || (github.event_name != 'pull_request') }}
+        id: login-ecr
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.aws_account }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+
+      # https://docs.github.com/en/actions/learn-github-actions/contexts#github-context
+      # - name: Tag and push image to Amazon ECR
+      #   if: ${{ (github.event_name == 'push') || (github.event_name != 'pull_request') }}
+      #   id: docker_tag
+      #   env:
+      #     ECR_ACCOUNT: ${{ secrets.aws_account }}
+      #     ECR_REGION: ${{ env.AWS_REGION }}
+      #   run: |
+      #     docker tag "localhost:5000/${ECR_REPOSITORY}:${{ inputs.deployment_tag }}" "${ECR_ACCOUNT}.dkr.ecr.${ECR_REGION}.amazonaws.com/${ECR_REPOSITORY}:${{ inputs.deployment_tag }}"
+      #     docker push ${ECR_ACCOUNT}.dkr.ecr.${ECR_REGION}.amazonaws.com/${ECR_REPOSITORY}:${{ inputs.deployment_tag }}
+
+      - name: Docker Build & Push ECR
+        id: docker_builds
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.aws_account }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ inputs.repository_name }}:${{ inputs.deployment_tag }}
+            ${{ secrets.aws_account }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ inputs.repository_name }}:${{env.ecr_tag}}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+             GITHUB_ACCESS_TOKEN=${{ secrets.token || '' }}
+             GITHUB_USER=${{ secrets.gh_user || '' }}
+             MAVEN_GITHUB_TOKEN=${{ secrets.maven_github_token || '' }}
