@@ -15,19 +15,17 @@ on:
         required: true
         type: string
     secrets:
-      aws_access_key_id:
-        required: true
       aws_account:
         required: true
       aws_assume_role:
         required: true
-      aws_secret_access_key:
-        required: true
-      maven_github_token:
-        required: true
-      submodule_gh_secret:
+      token:
         required: false
       npm_token:
+        required: false
+      gh_user:
+        required: false
+      maven_github_token:
         required: false
 
 env:
