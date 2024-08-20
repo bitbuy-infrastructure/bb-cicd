@@ -33,12 +33,9 @@ env:
   AWS_REGION: ${{ inputs.aws_region }}
   # TODO THIS WILL NEED A SCRIPT TO CHANGE... some how ...
   IMAGE_TAG: ${{ github.ref_name }}-${{ github.sha }}
-  SUBMODULE_GH_SECRET: ${{ secrets.submodule_gh_secret }}
   NPM_TOKEN: ${{ secrets.npm_token }}
 
-permissions:
-  id-token: write
-  contents: read
+
 
 jobs:
   reusable-docker-build:
@@ -48,6 +45,10 @@ jobs:
         image: registry:2
         ports:
           - 5000:5000
+
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       - name: Configure AWS Credentials
