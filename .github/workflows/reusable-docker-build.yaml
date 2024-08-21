@@ -108,6 +108,14 @@ jobs:
         with:
           registry: ${{ secrets.aws_account }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
 
+      - name: Set tag for branch
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/master" || "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "ecr_tag=stable" >> "$GITHUB_ENV"
+          else
+            echo "ecr_tag=latest" >> "$GITHUB_ENV"
+          fi
+
       # https://docs.github.com/en/actions/learn-github-actions/contexts#github-context
       # - name: Tag and push image to Amazon ECR
       #   if: ${{ (github.event_name == 'push') || (github.event_name != 'pull_request') }}
