@@ -51,6 +51,11 @@ jobs:
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: ./
+
       - name: Set up codeartifact
         run: |
           CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain bb-maven-repo --domain-owner 972594475906 --query authorizationToken --region us-east-2 --output text)
