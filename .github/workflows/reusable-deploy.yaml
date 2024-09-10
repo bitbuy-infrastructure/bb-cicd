@@ -98,7 +98,7 @@ jobs:
           python ${{ github.workspace }}/pipeline/src/pipeline.py
           cat ${{ github.workspace }}/${{ inputs.deployment_repo }}/${{ inputs.deployment_folder }}/${{ inputs.pipeline_tenant }}/${{ inputs.pipeline_env }}/${{ inputs.pipeline_zone }}/values.yaml
 
-      - uses: webfactory/ssh-agent@v0.5.4
+      - uses: webfactory/ssh-agent@v0.8.0
         with:
             ssh-private-key: ${{ secrets.ssh-key }}
 
@@ -110,4 +110,4 @@ jobs:
           git config --local user.name "GitHub Action"
           git diff-index --quiet HEAD || git commit -am "update deployment for ${{ inputs.pipeline_tenant }} ${{ inputs.pipeline_env }} ${{ inputs.pipeline_zone }} ${{ github.repository }} ${{ inputs.deployment_tag }}"
           git push --force
-        if: github.event_name != 'pull_request'
+        # if: github.event_name != 'pull_request'

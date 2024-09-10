@@ -24,10 +24,10 @@ jobs:
       - id: docker_tag
         run: |
           echo 'docker_tag<<EOF' >> $GITHUB_ENV
-          echo ${{ github.ref_name }}-${{env.short_sha}} | sed 's./.-.g' | awk '{print tolower($0)}' >> $GITHUB_ENV
+          echo ${{env.short_sha}} | sed 's./.-.g' | awk '{print tolower($0)}' >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
       - id: show_tag
-        run: echo "${{env.docker_tag}}"
+        run: echo "${{ github.head_ref || github.ref_name }}-${{env.docker_tag}}"
     outputs:
       short_sha: ${{env.short_sha}}
-      docker_tag: ${{env.docker_tag}}
+      docker_tag: ${{ github.head_ref || github.ref_name }}-${{env.docker_tag}}
