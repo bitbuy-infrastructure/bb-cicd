@@ -30,4 +30,4 @@ jobs:
         run: echo "${{ github.head_ref || github.ref_name }}-${{env.docker_tag}}"
     outputs:
       short_sha: ${{env.short_sha}}
-      docker_tag: ${{env.docker_tag}}
+      docker_tag: ${{ github.head_ref || github.ref_name }}-${{env.docker_tag}}
