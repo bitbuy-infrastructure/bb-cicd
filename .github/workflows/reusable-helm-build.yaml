@@ -12,18 +12,18 @@ on:
         required: true
         type: string
     secrets:
-      aws_access_key_id:
-        required: true
       aws_account:
         required: true
       aws_assume_role:
-        required: true
-      aws_secret_access_key:
         required: true
 
 env:
   # cluster vars
   AWS_REGION: ${{ inputs.aws_region }}
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   reusable-helm-build:
