@@ -46,7 +46,7 @@ jobs:
 
     steps:
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.aws_access_key_id }}
           aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
@@ -57,13 +57,13 @@ jobs:
 
       - name: Checkout
         if: ${{ env.SUBMODULE_GH_SECRET == '' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: ./
           
       - name: Checkout with submodules
         if: ${{ env.SUBMODULE_GH_SECRET != '' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: ./
           token: ${{ env.SUBMODULE_GH_SECRET }}
