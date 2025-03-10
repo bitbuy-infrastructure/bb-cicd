@@ -64,11 +64,13 @@ jobs:
       - name: Add Github Registry Auth Token
         if: ${{ env.NPM_TOKEN != '' }}
         run: |
-          echo "//npm.pkg.github.com/:_authToken=${{ env.NPM_TOKEN }}" > ./.npmrc
+          echo "save-exact=true" >> ./.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ env.NPM_TOKEN }}" >> ./.npmrc
           echo "@coinsquarex:registry=https://npm.pkg.github.com" >> ./.npmrc
           echo "registry=https://registry.npmjs.org" >> ./.npmrc
           # HACK: Needed so that yarn install doesn't fail for internal NPM packages
           echo 'registry "https://npm.pkg.github.com"' > .yarnrc
+          echo 'always-auth=true' >> ./.npmrc
 
       - name: Set up QEMU for multi Architecture Build
         uses: docker/setup-qemu-action@v3
