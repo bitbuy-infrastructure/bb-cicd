@@ -59,4 +59,4 @@ logger.info(f'this file is been updated: {deployment_file}')
 # deployment_file = 'values.yaml'
 
 with open(deployment_file, 'w') as file:
-    yaml.dump(output, file)
+    yaml.dump(output, file, default_style='"')
