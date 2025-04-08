@@ -83,7 +83,7 @@ jobs:
           version: latest
           driver-opts: |
             network=host
-            image=moby/buildkit:v0.13.0
+            image=moby/buildkit:v0.20.2
 
       - name: Login to Amazon ECR
         id: login-ecr
