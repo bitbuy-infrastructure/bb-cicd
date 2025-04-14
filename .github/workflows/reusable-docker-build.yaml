@@ -108,8 +108,8 @@ jobs:
           tags: |
             ${{ secrets.aws_account }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ inputs.repository_name }}:${{ inputs.deployment_tag }}
             ${{ secrets.aws_account }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ inputs.repository_name }}:${{env.ecr_tag}}
-          # cache-from: type=gha
-          # cache-to: type=gha,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
              GITHUB_ACCESS_TOKEN=${{ secrets.gh_token || '' }}
              GITHUB_USER=${{ secrets.gh_user || '' }}
