@@ -26,8 +26,33 @@ permissions:
   contents: read
 
 jobs:
+  should-skip:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.skip-if-pr.outputs.skip }}
+    steps:
+      - name: Skip if pull request
+        id: skip-if-pr
+        run: |
+          SKIP=false
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            SKIP=true
+            echo "Skipping on event ${{ github.event_name }}"
+          fi
+          echo "env SKIP=${SKIP}"
+          echo "skip=${SKIP}" >> $GITHUB_OUTPUT
+
+          echo "| Event Name | Skip | commit | ref |" >> $GITHUB_STEP_SUMMARY
+          echo "|------------|------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          SHA=${{ github.sha }}
+          COMMIT_URL="https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
+          REF_URL="https://github.com/${{ github.repository }}/compare/${{ github.ref }}"
+          echo "| ${{ github.event_name }} | $SKIP | [${SHA::7}](${COMMIT_URL}) | [${{ github.ref }}](${REF_URL}) |" >> $GITHUB_STEP_SUMMARY
+
   reusable-helm-build:
     runs-on: ubuntu-latest
+    needs: [should-skip]
+    if: needs.should-skip.outputs.skip != 'true'
     steps:
 
       - name: Checkout
@@ -58,14 +83,12 @@ jobs:
           fi
 
       - name: helm chart build
-        if: ${{ (github.event_name == 'push') && (github.event_name != 'pull_request') }}
         run: |
           helm package helm/chart
 
       - name: Configure AWS Credentials
         id: aws-sts
         uses: aws-actions/configure-aws-credentials@v4
-        if: ${{ (github.event_name == 'push') && (github.event_name != 'pull_request') }}
         with:
           role-to-assume: arn:aws:iam::${{ secrets.aws_account }}:role/${{ secrets.aws_assume_role }}
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
@@ -74,14 +97,12 @@ jobs:
           role-skip-session-tagging: true
 
       - name: aws ecr logging
-        if: ${{ (github.event_name == 'push') && (github.event_name != 'pull_request') }}
         id: login-ecr
         uses: docker/login-action@v3
         with:
           registry: ${{ secrets.aws_account }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
 
       - name: push helm chart to ecr
-        if: ${{ (github.event_name == 'push') && (github.event_name != 'pull_request') }}
         run: |
           charts=$(ls *.tgz | xargs)
           helm push ${charts} oci://${{ secrets.aws_account }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/helm/
