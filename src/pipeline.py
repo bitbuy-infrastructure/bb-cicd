@@ -54,9 +54,9 @@ logger.debug(output)
 # {GITHUB_WORKSPACE}/bb-argocd-microservices-deployment/microservices/ci-demo/bbtd/np/main01/values.yaml
 deployment_file = f'{GITHUB_WORKSPACE}/{ARGOCD_FOLDER}/{DEPLOYMENT_FOLDER}/{PIPELINE_TENANT}/{PIPELINE_ENV}/{PIPELINE_ZONE}/values.yaml'
 
-logger.info(f'this file is been updated: {deployment_file}')
+logger.info(f'this file is been updated with default_style: {deployment_file}')
 # if locally testing
 # deployment_file = 'values.yaml'
 
 with open(deployment_file, 'w') as file:
-    yaml.dump(output, file)
+    yaml.dump(output, file, default_style='"')
